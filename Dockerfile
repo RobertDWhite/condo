@@ -41,6 +41,8 @@ ARG TURBO_TEAM
 ARG TURBO_TOKEN
 ARG TURBO_API
 ARG TURBO_REMOTE_ONLY=false
+# Homelab: narrow the monorepo build to the apps we actually deploy.
+ARG BUILD_CMD="yarn build"
 
 WORKDIR /app
 # Copy entire repo
@@ -66,7 +68,7 @@ RUN chmod +x ./bin/run_condo_domain_tests.sh
 RUN --mount=type=cache,target=/usr/local/share/.cache/yarn \
     --mount=type=cache,target=/app/.turbo \
     set -ex \
-    && yarn build \
+    && ${BUILD_CMD} \
     && rm -rf /app/out \
     && rm -rf /app/.env  \
     && rm -rf /app/.config /app/.cache /app/.docker  \
