@@ -31,8 +31,10 @@ COPY --chown=app:app ./out /app
 # Copy yarn berry
 COPY --chown=app:app ./.yarn /app/.yarn
 COPY --chown=app:app ./.yarnrc.yml /app/.yarnrc.yml
+# Homelab: the private submodule workspaces are absent in a public fork, so the
+# lockfile legitimately changes. Immutable installs cannot work here.
 RUN --mount=type=cache,target=/usr/local/share/.cache/yarn \
-    yarn install --immutable --inline-builds
+    YARN_ENABLE_IMMUTABLE_INSTALLS=false yarn install --inline-builds
 
 # Builder
 FROM base as builder
