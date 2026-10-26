@@ -111,4 +111,4 @@ COPY --from=builder --chown=app:app /app /app
 # Fixtures are removed in the builder so their bytes never enter the final COPY layer.
 RUN test ! -e apps/condo/domains/notification/adapters/apple/AppleJSONWebToken.spec.js \
     && test ! -e apps/condo/domains/organization/integrations/sbbol/sync/MockSbbolResponses.js \
-    && node -e "for (const app of ['condo', 'address-service']) { const r = require('module').createRequire('/app/apps/' + app + '/package.json'); for (const name of ['@open-condo/clients/address-service-client', 'dd-trace', 'cross-env']) r.resolve(name); if (app === 'condo') for (const name of ['socks-proxy-agent', 'bad-words-next']) r.resolve(name); }"
+    && node -e "for (const app of ['condo', 'address-service']) { const r = require('module').createRequire('/app/apps/' + app + '/package.json'); for (const name of ['@open-condo/clients/address-service-client', 'dd-trace', 'cross-env']) r.resolve(name); if (app === 'condo') for (const name of ['socks-proxy-agent', 'bad-words-next', 'typescript']) r.resolve(name); }"
