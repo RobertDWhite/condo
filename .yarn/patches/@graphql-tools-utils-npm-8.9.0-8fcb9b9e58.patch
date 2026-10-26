@@ -1,0 +1,36 @@
+diff --git a/cjs/mergeDeep.js b/cjs/mergeDeep.js
+index c38d63e2277e74bee062b02be64c9fb431f8d42f..66cc5ff84b2b6f32d86252b221b65d9e462d25a2 100644
+--- a/cjs/mergeDeep.js
++++ b/cjs/mergeDeep.js
+@@ -23,8 +23,12 @@ function mergeDeep(sources, respectPrototype = false) {
+                 }
+             }
+             for (const key in source) {
++                // Backport GHSA-7mx3-vvmw-hjmv from upstream 0b9529f.
++                if (key === '__proto__' || key === 'constructor' || key === 'prototype') {
++                    continue;
++                }
+                 if (isObject(source[key])) {
+-                    if (!(key in output)) {
++                    if (!(Object.prototype.hasOwnProperty.call(output, key))) {
+                         Object.assign(output, { [key]: source[key] });
+                     }
+                     else {
+diff --git a/esm/mergeDeep.js b/esm/mergeDeep.js
+index 5bc666e058173baf741a8d27421e947d4a7139d3..146029aa76f35076a7edd619eb7803409d23916f 100644
+--- a/esm/mergeDeep.js
++++ b/esm/mergeDeep.js
+@@ -20,8 +20,12 @@ export function mergeDeep(sources, respectPrototype = false) {
+                 }
+             }
+             for (const key in source) {
++                // Backport GHSA-7mx3-vvmw-hjmv from upstream 0b9529f.
++                if (key === '__proto__' || key === 'constructor' || key === 'prototype') {
++                    continue;
++                }
+                 if (isObject(source[key])) {
+-                    if (!(key in output)) {
++                    if (!(Object.prototype.hasOwnProperty.call(output, key))) {
+                         Object.assign(output, { [key]: source[key] });
+                     }
+                     else {
