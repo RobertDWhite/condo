@@ -83,7 +83,10 @@ RUN --mount=type=cache,target=/usr/local/share/.cache/yarn \
 
 # Keep development tools available for the build, then retain runtime workspaces.
 RUN yarn workspaces focus @app/condo @app/address-service --production \
-    && node bin/security/graphql-regression.cjs
+    && node bin/security/graphql-regression.cjs \
+    && node bin/security/shell-quote-regression.cjs \
+    && rm -f apps/condo/domains/notification/adapters/apple/AppleJSONWebToken.spec.js \
+        apps/condo/domains/organization/integrations/sbbol/sync/MockSbbolResponses.js
 
 # Runtime container: retain Python/Node libraries without compiler/header toolchains.
 FROM python AS runtime
@@ -105,7 +108,7 @@ USER app:app
 WORKDIR /app
 COPY --from=builder --chown=app:app /app /app
 
-# Test-only key/token fixtures are not needed by either production application.
-RUN rm -f apps/condo/domains/notification/adapters/apple/AppleJSONWebToken.spec.js \
-    apps/condo/domains/organization/integrations/sbbol/sync/MockSbbolResponses.js \
+# Fixtures are removed in the builder so their bytes never enter the final COPY layer.
+RUN test ! -e apps/condo/domains/notification/adapters/apple/AppleJSONWebToken.spec.js \
+    && test ! -e apps/condo/domains/organization/integrations/sbbol/sync/MockSbbolResponses.js \
     && node -e "for (const app of ['condo', 'address-service']) { const r = require('module').createRequire('/app/apps/' + app + '/package.json'); for (const name of ['@open-condo/clients/address-service-client', 'dd-trace', 'cross-env']) r.resolve(name); if (app === 'condo') for (const name of ['socks-proxy-agent', 'bad-words-next']) r.resolve(name); }"

@@ -4,6 +4,7 @@ Run from the repository root:
 
 ```sh
 node bin/security/graphql-regression.cjs
+node bin/security/shell-quote-regression.cjs
 NODE_ENV=production node bin/security/ui-pragma-regression.cjs
 ```
 
@@ -25,3 +26,11 @@ Version-based scanners will still report these original package versions. Retain
 Newer Tiptap distributions leave source-file `@jsxImportSource` directives in already compiled JavaScript. If bundled into the UI library, those comments are reinterpreted for the whole file by the legacy Keystone admin Babel configuration. The UI loader removes only parsed JSX pragma comments from compiled Tiptap distribution files. Strings, other comments and executable code remain intact; TypeScript/JSX source files are not processed by this rule.
 
 The regression reproduces the Babel failure, verifies the pragma removal and ensures a matching string literal is preserved. The rebuilt full UI bundle must also pass the admin compilation path; removing the vulnerable editor update is not the compatibility fix.
+
+## Quoting, request parsing and runtime layers
+
+The shell-quote regression exercises GHSA-pqg4-j6r4-53mv without executing a shell. It checks all four line terminators after a comment token and verifies ordinary argument round trips in every installed copy. It fails on1.9.0 and passes on1.11.0. Docker runs it after production dependency focus.
+
+body-parser is pinned to1.20.9 for [GHSA-27r3-jxmh-p828](https://github.com/expressjs/body-parser/security/advisories/GHSA-27r3-jxmh-p828). This exact version is preapproved through Yarn's age gate because it is the maintainer's newly published security fix; the general seven-day gate remains enabled. Effect3.20.0 fixes [GHSA-38f7-945m-qr2g](https://github.com/Effect-TS/effect/security/advisories/GHSA-38f7-945m-qr2g).
+
+Test key/token fixtures are removed in the builder before its filesystem is copied to the final runtime stage. Removing them after COPY would leave bytes in an earlier distributable layer. Final-image secret scanning remains required; do not suppress matching values or treat a clean merged filesystem as sufficient layer evidence.
