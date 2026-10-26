@@ -80,8 +80,24 @@ RUN --mount=type=cache,target=/usr/local/share/.cache/yarn \
     && rm -rf /app/.config /app/.cache /app/.docker  \
     && ls -lah /app/
 
-# Runtime container
-FROM base
+# Keep development tools available for the build, then retain runtime workspaces.
+RUN yarn workspaces focus @app/condo @app/address-service --production
+
+# Runtime container: retain Python/Node libraries without compiler/header toolchains.
+FROM python AS runtime
+COPY --from=base /usr/local/ /usr/local/
+COPY --from=node /opt/ /opt/
+RUN apt-get update \
+    && apt-get upgrade -y \
+    && apt-get install -y --no-install-recommends ca-certificates libstdc++6 libgomp1 \
+    && rm -rf /var/lib/apt/lists/* \
+    && groupadd -r app --gid=999 \
+    && useradd --system --create-home --home /app --gid 999 --uid=999 --shell /bin/bash app \
+    && python3 -m pip check \
+    && python3 -m pip uninstall -y pip setuptools wheel \
+    && rm -rf /usr/local/lib/python3.14/ensurepip \
+    && node --version \
+    && yarn --version
 USER app:app
 WORKDIR /app
 COPY --from=builder --chown=app:app /app /app
