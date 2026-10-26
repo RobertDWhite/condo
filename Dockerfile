@@ -74,6 +74,7 @@ RUN chmod +x ./bin/run_condo_domain_tests.sh
 RUN --mount=type=cache,target=/usr/local/share/.cache/yarn \
     --mount=type=cache,target=/app/.turbo \
     set -ex \
+    && NODE_ENV=production node bin/security/ui-pragma-regression.cjs \
     && ${BUILD_CMD} \
     && rm -rf /app/out \
     && rm -rf /app/.env  \
@@ -81,7 +82,8 @@ RUN --mount=type=cache,target=/usr/local/share/.cache/yarn \
     && ls -lah /app/
 
 # Keep development tools available for the build, then retain runtime workspaces.
-RUN yarn workspaces focus @app/condo @app/address-service --production
+RUN yarn workspaces focus @app/condo @app/address-service --production \
+    && node bin/security/graphql-regression.cjs
 
 # Runtime container: retain Python/Node libraries without compiler/header toolchains.
 FROM python AS runtime

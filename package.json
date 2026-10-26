@@ -133,9 +133,15 @@
     "@xmldom/xmldom": "^0.8.12",
     "js-cookie": "^3.0.8",
     "@whatwg-node/fetch/undici": "5.28.5",
-    "undici": "7.28.0",
+    "undici": "7.30.1",
     "posthog-js/dompurify": "3.4.17",
     "ws@npm:8.13.0": "8.22.0",
-    "js-yaml@npm:4.1.0": "4.3.2"
+    "js-yaml@npm:4.1.0": "4.3.2",
+    "postcss@npm:8.4.31": "8.5.18",
+    "@graphql-tools/utils@npm:^11.0.0": "patch:@graphql-tools/utils@npm%3A11.2.0#~/.yarn/patches/@graphql-tools-utils-npm-11.2.0-d317e0674a.patch",
+    "@graphql-tools/utils@npm:^11.2.0": "patch:@graphql-tools/utils@npm%3A11.2.0#~/.yarn/patches/@graphql-tools-utils-npm-11.2.0-d317e0674a.patch",
+    "@graphql-tools/utils@npm:^9.2.1": "patch:@graphql-tools/utils@npm%3A9.2.1#~/.yarn/patches/@graphql-tools-utils-npm-9.2.1-ed63b70392.patch",
+    "@graphql-tools/utils@npm:8.9.0": "patch:@graphql-tools/utils@npm%3A8.9.0#~/.yarn/patches/@graphql-tools-utils-npm-8.9.0-8fcb9b9e58.patch",
+    "@graphql-tools/utils@npm:^9.0.0": "patch:@graphql-tools/utils@npm%3A9.2.1#~/.yarn/patches/@graphql-tools-utils-npm-9.2.1-ed63b70392.patch"
   }
 }

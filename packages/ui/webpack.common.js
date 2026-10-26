@@ -38,6 +38,12 @@ module.exports = {
     module: {
         rules: [
             {
+                test: /\.[cm]?js$/,
+                include: pathname => pathname.includes(`${path.sep}node_modules${path.sep}@tiptap${path.sep}`)
+                    && pathname.includes(`${path.sep}dist${path.sep}`),
+                use: [path.resolve(__dirname, 'bin/strip-compiled-jsx-pragmas.js')],
+            },
+            {
                 test: /\.css$/,
                 use: baseCssLoaders,
             },

@@ -1,0 +1,126 @@
+diff --git a/cjs/mergeDeep.js b/cjs/mergeDeep.js
+index a79ec05ad502373b2cbe96a4e1b6591785a8e85f..d23a9da5f0f17110840758aac56b5ec5fe74acd2 100644
+--- a/cjs/mergeDeep.js
++++ b/cjs/mergeDeep.js
+@@ -64,7 +64,11 @@ function mergeDeep(sources, respectPrototype = false, respectArrays = false, res
+                 }
+             }
+             for (const key in source) {
+-                if (key in output) {
++                // Backport GHSA-7mx3-vvmw-hjmv from upstream 0b9529f.
++                if (key === '__proto__' || key === 'constructor' || key === 'prototype') {
++                    continue;
++                }
++                if (Object.prototype.hasOwnProperty.call(output, key)) {
+                     output[key] = mergeDeep([output[key], source[key]], respectPrototype, respectArrays, respectArrayLength, respectNonEnumerableSymbols);
+                 }
+                 else {
+diff --git a/cjs/mergeIncrementalResult.js b/cjs/mergeIncrementalResult.js
+index c19d3f7330816a98189d340c173aa38aa93f046f..95bdfdf4883bf5785649d7daa3bd03d64c330829 100644
+--- a/cjs/mergeIncrementalResult.js
++++ b/cjs/mergeIncrementalResult.js
+@@ -4,7 +4,7 @@ exports.mergeIncrementalResult = mergeIncrementalResult;
+ const mergeDeep_js_1 = require("./mergeDeep.js");
+ function mergeIncrementalResult({ incrementalResult, executionResult, }) {
+     const path = ['data', ...(incrementalResult.path ?? [])];
+-    if (incrementalResult.items) {
++    if (incrementalResult.items && isSafeKeyPath(path)) {
+         for (const item of incrementalResult.items) {
+             setObjectKeyPath(executionResult, path, item);
+             // Increment the last path segment (the array index) to merge the next item at the next index
+@@ -30,7 +30,15 @@ function mergeIncrementalResult({ incrementalResult, executionResult, }) {
+         });
+     }
+ }
++// Backport GHSA-c4qx-w738-7hr3 from upstream 20d36a5.
++function isSafeKeyPath(keyPath) {
++    return keyPath.every(key => (typeof key === 'string' || typeof key === 'number')
++        && key !== '__proto__' && key !== 'constructor' && key !== 'prototype');
++}
+ function setObjectKeyPath(obj, keyPath, value) {
++    if (!isSafeKeyPath(keyPath)) {
++        return;
++    }
+     let current = obj;
+     let i;
+     for (i = 0; i < keyPath.length - 1; i++) {
+@@ -38,7 +46,7 @@ function setObjectKeyPath(obj, keyPath, value) {
+         if (key === '__proto__' || key === 'constructor' || key === 'prototype') {
+             return;
+         }
+-        if (current[key] == null) {
++        if (!Object.prototype.hasOwnProperty.call(current, key) || current[key] == null) {
+             // Determine if the next key is a number to create an array, otherwise create an object
+             current[key] = typeof keyPath[i + 1] === 'number' ? [] : {};
+         }
+@@ -48,6 +56,6 @@ function setObjectKeyPath(obj, keyPath, value) {
+     if (finalKey === '__proto__' || finalKey === 'constructor' || finalKey === 'prototype') {
+         return;
+     }
+-    const existingValue = current[finalKey];
++    const existingValue = Object.prototype.hasOwnProperty.call(current, finalKey) ? current[finalKey] : undefined;
+     current[finalKey] = existingValue != null ? (0, mergeDeep_js_1.mergeDeep)([existingValue, value]) : value;
+ }
+diff --git a/esm/mergeDeep.js b/esm/mergeDeep.js
+index 6e4fff4a0b00a86730e629a2587c6a9912a312ec..16cbc87c80578612c515480364e043a738edcd4f 100644
+--- a/esm/mergeDeep.js
++++ b/esm/mergeDeep.js
+@@ -61,7 +61,11 @@ export function mergeDeep(sources, respectPrototype = false, respectArrays = fal
+                 }
+             }
+             for (const key in source) {
+-                if (key in output) {
++                // Backport GHSA-7mx3-vvmw-hjmv from upstream 0b9529f.
++                if (key === '__proto__' || key === 'constructor' || key === 'prototype') {
++                    continue;
++                }
++                if (Object.prototype.hasOwnProperty.call(output, key)) {
+                     output[key] = mergeDeep([output[key], source[key]], respectPrototype, respectArrays, respectArrayLength, respectNonEnumerableSymbols);
+                 }
+                 else {
+diff --git a/esm/mergeIncrementalResult.js b/esm/mergeIncrementalResult.js
+index 7ba3fda910c92c9362868001f1814ade79f60f8b..0244693cf688952d30ca02e399da8322ab806d34 100644
+--- a/esm/mergeIncrementalResult.js
++++ b/esm/mergeIncrementalResult.js
+@@ -1,7 +1,7 @@
+ import { mergeDeep } from './mergeDeep.js';
+ export function mergeIncrementalResult({ incrementalResult, executionResult, }) {
+     const path = ['data', ...(incrementalResult.path ?? [])];
+-    if (incrementalResult.items) {
++    if (incrementalResult.items && isSafeKeyPath(path)) {
+         for (const item of incrementalResult.items) {
+             setObjectKeyPath(executionResult, path, item);
+             // Increment the last path segment (the array index) to merge the next item at the next index
+@@ -27,7 +27,15 @@ export function mergeIncrementalResult({ incrementalResult, executionResult, })
+         });
+     }
+ }
++// Backport GHSA-c4qx-w738-7hr3 from upstream 20d36a5.
++function isSafeKeyPath(keyPath) {
++    return keyPath.every(key => (typeof key === 'string' || typeof key === 'number')
++        && key !== '__proto__' && key !== 'constructor' && key !== 'prototype');
++}
+ function setObjectKeyPath(obj, keyPath, value) {
++    if (!isSafeKeyPath(keyPath)) {
++        return;
++    }
+     let current = obj;
+     let i;
+     for (i = 0; i < keyPath.length - 1; i++) {
+@@ -35,7 +43,7 @@ function setObjectKeyPath(obj, keyPath, value) {
+         if (key === '__proto__' || key === 'constructor' || key === 'prototype') {
+             return;
+         }
+-        if (current[key] == null) {
++        if (!Object.prototype.hasOwnProperty.call(current, key) || current[key] == null) {
+             // Determine if the next key is a number to create an array, otherwise create an object
+             current[key] = typeof keyPath[i + 1] === 'number' ? [] : {};
+         }
+@@ -45,6 +53,6 @@ function setObjectKeyPath(obj, keyPath, value) {
+     if (finalKey === '__proto__' || finalKey === 'constructor' || finalKey === 'prototype') {
+         return;
+     }
+-    const existingValue = current[finalKey];
++    const existingValue = Object.prototype.hasOwnProperty.call(current, finalKey) ? current[finalKey] : undefined;
+     current[finalKey] = existingValue != null ? mergeDeep([existingValue, value]) : value;
+ }
