@@ -36,3 +36,7 @@ body-parser is pinned to1.20.9 for [GHSA-27r3-jxmh-p828](https://github.com/expr
 Test key/token fixtures are removed in the builder before its filesystem is copied to the final runtime stage. Removing them after COPY would leave bytes in an earlier distributable layer. Final-image secret scanning remains required; do not suppress matching values or treat a clean merged filesystem as sufficient layer evidence.
 
 TypeScript is a runtime dependency of the Condo web app: Next.js loads `next.config.ts` at server startup. The final image checks its resolution; do not remove it as a build-only dependency. A restored-image startup test exposed Next attempting an on-demand install when it was missing. Runtime tests must remain isolated from external package registries so undeclared dependencies fail visibly.
+
+## Default Node trust store
+
+Node24.22.1 includes the [October21 security release](https://nodejs.org/en/blog/vulnerability/october-2026-security-releases), including eMudhra trust mitigation. The final image runs `node bin/security/trust-roots.cjs`, requiring the default-store API, a nonempty trust store, no disabled TLS verification and absence of the affected emSign ECC Root CA - G3 certificate fingerprint. This does not inspect application-created TLS contexts, Java/Go stores or every intermediate denylist. Live TLS and application-specific checks remain separate gates.

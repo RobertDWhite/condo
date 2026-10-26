@@ -2,7 +2,7 @@
 ARG REGISTRY=docker.io
 
 FROM ${REGISTRY}/python:3.14.9-slim-bookworm@sha256:945c2676dc2b18e0c1f16879244122c57c0ffede60006bf3df159c507a31bcae AS python
-FROM ${REGISTRY}/node:24.20.0-bookworm-slim@sha256:ba849c60be29959425b8734d57b8b4b7d56f98edd9504c9af091d5281095a71e AS node
+FROM ${REGISTRY}/node:24.22.1-bookworm-slim@sha256:55fb5f5a527ea2c5c4a95f963e48ef90aa38c7b346054fdc8ee9957a2b55d205 AS node
 
 FROM ${REGISTRY}/buildpack-deps:bookworm@sha256:ccb050a415a94a3a78acbe35084ec8f06ae46fa158e3650c96f9b4fb514de6d3 AS base
 
@@ -112,3 +112,5 @@ COPY --from=builder --chown=app:app /app /app
 RUN test ! -e apps/condo/domains/notification/adapters/apple/AppleJSONWebToken.spec.js \
     && test ! -e apps/condo/domains/organization/integrations/sbbol/sync/MockSbbolResponses.js \
     && node -e "for (const app of ['condo', 'address-service']) { const r = require('module').createRequire('/app/apps/' + app + '/package.json'); for (const name of ['@open-condo/clients/address-service-client', 'dd-trace', 'cross-env']) r.resolve(name); if (app === 'condo') for (const name of ['socks-proxy-agent', 'bad-words-next', 'typescript']) r.resolve(name); }"
+
+RUN node bin/security/trust-roots.cjs
