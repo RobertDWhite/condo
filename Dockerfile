@@ -95,9 +95,15 @@ RUN apt-get update \
     && useradd --system --create-home --home /app --gid 999 --uid=999 --shell /bin/bash app \
     && python3 -m pip check \
     && python3 -m pip uninstall -y pip setuptools wheel \
-    && rm -rf /usr/local/lib/python3.14/ensurepip \
+    && rm -rf /usr/local/lib/python3.14/ensurepip /usr/local/lib/node_modules/npm \
+    && rm -f /usr/local/bin/npm /usr/local/bin/npx \
     && node --version \
     && yarn --version
 USER app:app
 WORKDIR /app
 COPY --from=builder --chown=app:app /app /app
+
+# Test-only key/token fixtures are not needed by either production application.
+RUN rm -f apps/condo/domains/notification/adapters/apple/AppleJSONWebToken.spec.js \
+    apps/condo/domains/organization/integrations/sbbol/sync/MockSbbolResponses.js \
+    && node -e "for (const app of ['condo', 'address-service']) { const r = require('module').createRequire('/app/apps/' + app + '/package.json'); for (const name of ['@open-condo/clients/address-service-client', 'dd-trace', 'cross-env']) r.resolve(name); if (app === 'condo') for (const name of ['socks-proxy-agent', 'bad-words-next']) r.resolve(name); }"
