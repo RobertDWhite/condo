@@ -1,17 +1,22 @@
 # syntax=docker/dockerfile:1.7
 ARG REGISTRY=docker.io
 
-FROM ${REGISTRY}/python:3.14-slim-bookworm AS python
-FROM ${REGISTRY}/node:24-bookworm-slim AS node
+FROM ${REGISTRY}/python:3.14.9-slim-bookworm@sha256:945c2676dc2b18e0c1f16879244122c57c0ffede60006bf3df159c507a31bcae AS python
+FROM ${REGISTRY}/node:24.20.0-bookworm-slim@sha256:ba849c60be29959425b8734d57b8b4b7d56f98edd9504c9af091d5281095a71e AS node
 
-FROM ${REGISTRY}/buildpack-deps:bookworm AS base
+FROM ${REGISTRY}/buildpack-deps:bookworm@sha256:ccb050a415a94a3a78acbe35084ec8f06ae46fa158e3650c96f9b4fb514de6d3 AS base
 
 COPY --from=python /usr/local/ /usr/local/
 COPY --from=node /usr/local/ /usr/local/
 COPY --from=node /opt/ /opt/
 
+COPY requirements-runtime.txt /tmp/requirements-runtime.txt
+
 # Add app user/group! Clean packages and fix links! Check version! And install some extra packages!
 RUN set -ex \
+    && apt-get update \
+    && apt-get upgrade -y \
+    && rm -rf /var/lib/apt/lists/* \
 	&& groupadd -r app --gid=999 \
 	&& useradd --system --create-home --home /app --gid 999 --uid=999 --shell /bin/bash app \
 	&& rm -f /usr/local/bin/docker-entrypoint.sh \
@@ -19,7 +24,8 @@ RUN set -ex \
 	&& pip --version \
 	&& node --version \
 	&& yarn --version \
-	&& python3 -m pip install 'psycopg2-binary==2.9.10' && python3 -m pip install 'Django==5.2' \
+	&& python3 -m pip install --no-cache-dir --require-hashes -r /tmp/requirements-runtime.txt \
+    && rm /tmp/requirements-runtime.txt \
     && echo "OK"
 
 # Installer
