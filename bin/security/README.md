@@ -40,3 +40,7 @@ TypeScript is a runtime dependency of the Condo web app: Next.js loads `next.con
 ## Default Node trust store
 
 Node24.22.1 includes the [October21 security release](https://nodejs.org/en/blog/vulnerability/october-2026-security-releases), including eMudhra trust mitigation. The final image runs `node bin/security/trust-roots.cjs`, requiring the default-store API, a nonempty trust store, no disabled TLS verification and absence of the affected emSign ECC Root CA - G3 certificate fingerprint. This does not inspect application-created TLS contexts, Java/Go stores or every intermediate denylist. Live TLS and application-specific checks remain separate gates.
+
+## Debian runtime libraries
+
+All Python, Node and compiler stages use digest-pinned Debian Trixie bases, keeping native-module build and runtime libc aligned. Debian lists Trixie fixed for [SQLite CVE-2025-7458](https://security-tracker.debian.org/tracker/CVE-2025-7458) and [zlib CVE-2023-45853](https://security-tracker.debian.org/tracker/CVE-2023-45853). The final image verifies Python actually loads SQLite >=3.42.0 and zlib >=1.3.1 and can import psycopg2. These targeted gates are not a vulnerability-free claim; full scans and restored web, address-service, worker and database tests remain required.

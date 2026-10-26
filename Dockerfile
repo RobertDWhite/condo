@@ -1,10 +1,10 @@
 # syntax=docker/dockerfile:1.7
 ARG REGISTRY=docker.io
 
-FROM ${REGISTRY}/python:3.14.9-slim-bookworm@sha256:945c2676dc2b18e0c1f16879244122c57c0ffede60006bf3df159c507a31bcae AS python
-FROM ${REGISTRY}/node:24.22.1-bookworm-slim@sha256:55fb5f5a527ea2c5c4a95f963e48ef90aa38c7b346054fdc8ee9957a2b55d205 AS node
+FROM ${REGISTRY}/python:3.14.9-slim-trixie@sha256:35caba83af2fe6da9a5d922f9b0156f21d1246a48278c58a08bd253303ba42e8 AS python
+FROM ${REGISTRY}/node:24.22.1-trixie-slim@sha256:43b9ba1142b8dcf33fa8f922ca1be85714adc444e0586c7cf7726daaeabc1bea AS node
 
-FROM ${REGISTRY}/buildpack-deps:bookworm@sha256:ccb050a415a94a3a78acbe35084ec8f06ae46fa158e3650c96f9b4fb514de6d3 AS base
+FROM ${REGISTRY}/buildpack-deps:trixie@sha256:880a5e3d451b50a7b1acd06093a980771a40c2fac2bce29a2145e0f4825266f4 AS base
 
 COPY --from=python /usr/local/ /usr/local/
 COPY --from=node /usr/local/ /usr/local/
@@ -114,3 +114,6 @@ RUN test ! -e apps/condo/domains/notification/adapters/apple/AppleJSONWebToken.s
     && node -e "for (const app of ['condo', 'address-service']) { const r = require('module').createRequire('/app/apps/' + app + '/package.json'); for (const name of ['@open-condo/clients/address-service-client', 'dd-trace', 'cross-env']) r.resolve(name); if (app === 'condo') for (const name of ['socks-proxy-agent', 'bad-words-next', 'typescript']) r.resolve(name); }"
 
 RUN node bin/security/trust-roots.cjs
+
+# Check the libraries actually loaded by Python, not only package metadata.
+RUN python3 -c "import sqlite3, zlib, psycopg2; assert sqlite3.sqlite_version_info >= (3, 42, 0); assert tuple(map(int, zlib.ZLIB_RUNTIME_VERSION.split('.'))) >= (1, 3, 1); print('Runtime SQLite and zlib security version gates passed')"
